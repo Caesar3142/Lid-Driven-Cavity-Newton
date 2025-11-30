@@ -1,6 +1,6 @@
-# Lid-Driven Cavity Flow Solver using Discrete Loss Optimization
+# Lid-Driven Cavity Flow Solver using Newton's Method
 
-This project implements a solver for the lid-driven cavity flow problem using an **Optimizing a Discrete Loss (ODIL)** framework. The approach discretizes the Navier-Stokes equations using finite differences and optimizes the discrete residuals directly.
+This project implements a solver for the lid-driven cavity flow problem using **Newton's method**. The approach discretizes the Navier-Stokes equations using finite differences and solves the nonlinear system using Newton's iterative method.
 
 ## Problem Description
 
@@ -33,7 +33,7 @@ where:
 
 The Reynolds number is defined as: `Re = UL/ν`, where `U` is the lid velocity and `L` is the cavity length.
 
-## Methodology: Discrete Loss Optimization
+## Methodology: Newton's Method
 
 Instead of using traditional iterative solvers (like SIMPLE or PISO), this framework:
 
@@ -42,15 +42,18 @@ Instead of using traditional iterative solvers (like SIMPLE or PISO), this frame
    - X-momentum equation
    - Y-momentum equation
    - Continuity equation
-3. **Optimizes** the sum of squared residuals using gradient-based optimization (Adam optimizer)
+3. **Solves** the nonlinear system using Newton's method:
+   - Computes the Jacobian matrix of the residual vector
+   - Solves the linear system: J · δx = -R
+   - Updates the solution: x_new = x_old + damping · δx
 4. **Enforces boundary conditions** at each iteration
 
-The discrete loss is:
+The residual vector is:
 ```
-L = Σ(R_x² + R_y² + R_cont²)
+R = [R_x, R_y, R_cont]
 ```
 
-where `R_x`, `R_y`, and `R_cont` are the residuals of the momentum and continuity equations.
+where `R_x`, `R_y`, and `R_cont` are the residuals of the momentum and continuity equations at each interior grid point.
 
 ## Installation
 
@@ -110,8 +113,8 @@ solver = LidDrivenCavitySolver(
 
 # Solve
 solution = solver.solve(
-    max_iter=10000,  # Maximum iterations
-    lr=0.01,         # Learning rate
+    max_iter=100,    # Maximum iterations
+    damping=1.0,     # Damping factor for Newton update (0 < damping <= 1)
     tol=1e-6,        # Convergence tolerance
     verbose=True     # Print progress
 )
@@ -155,7 +158,7 @@ These CSV files are useful for:
 ## Project Structure
 
 ```
-LDC-ODIL/
+Lid-Driven-Cavity-Newton/
 ├── discrete_loss.py      # Discrete loss framework for Navier-Stokes
 ├── boundary_conditions.py # Boundary condition implementation
 ├── solver.py             # Main solver class
@@ -187,7 +190,9 @@ Free-slip means:
 ### 3. `LidDrivenCavitySolver` (`solver.py`)
 Main solver that:
 - Initializes velocity and pressure fields
-- Optimizes discrete loss using Adam optimizer
+- Solves the nonlinear system using Newton's method
+- Computes Jacobian matrix using automatic differentiation
+- Solves linear system at each Newton iteration
 - Enforces boundary conditions at each iteration
 - Monitors convergence
 
@@ -208,7 +213,8 @@ The solver generates:
 - Boundary conditions are enforced explicitly at each iteration
 - **Free-slip boundary conditions** are used for the stationary walls (bottom, left, right)
 - The top wall maintains a moving lid with specified velocity
-- For stability, the learning rate may need adjustment for different Reynolds numbers
+- Newton's method typically converges in fewer iterations than gradient-based methods, but each iteration is more expensive due to Jacobian computation
+- The damping factor can be reduced (e.g., 0.5) for better stability if convergence issues occur
 - Timing information is displayed showing solving time, visualization time, and total runtime
 
 ## References

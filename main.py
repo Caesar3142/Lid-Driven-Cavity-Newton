@@ -1,5 +1,5 @@
 """
-Main script for solving lid-driven cavity flow using Discrete Loss Optimization
+Main script for solving lid-driven cavity flow using Newton's Method
 """
 
 import numpy as np
@@ -15,13 +15,13 @@ def main():
     total_start_time = time.time()
     
     # Problem parameters
-    nx = 200  # Grid points in x-direction
-    ny = 200  # Grid points in y-direction
+    nx = 41  # Grid points in x-direction (reduced for faster testing)
+    ny = 41  # Grid points in y-direction (reduced for faster testing)
     Re = 100  # Reynolds number
     
     print("=" * 60)
     print("Lid-Driven Cavity Flow Solver")
-    print("Using Discrete Loss Optimization Framework")
+    print("Using Newton's Method")
     print("=" * 60)
     print(f"Grid size: {nx} x {ny}")
     print(f"Reynolds number: Re = {Re}")
@@ -34,11 +34,11 @@ def main():
     print("\nSolving...")
     solve_start_time = time.time()
     solution = solver.solve(
-        max_iter=10000,
-        lr=0.01,
+        max_iter=100,
+        damping=1.0,
         tol=1e-6,
         verbose=True,
-        log_interval=500
+        log_interval=10
     )
     solve_elapsed_time = time.time() - solve_start_time
     

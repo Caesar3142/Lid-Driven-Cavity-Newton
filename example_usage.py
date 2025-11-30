@@ -1,7 +1,7 @@
 """
 Example usage of the lid-driven cavity flow solver
 
-This script demonstrates how to use the discrete loss optimization framework
+This script demonstrates how to use Newton's method
 to solve the lid-driven cavity flow problem with different parameters.
 """
 
@@ -17,7 +17,7 @@ def example_basic():
     print("=" * 60)
     
     solver = LidDrivenCavitySolver(nx=41, ny=41, Re=100)
-    solution = solver.solve(max_iter=5000, lr=0.01, verbose=True, log_interval=500)
+    solution = solver.solve(max_iter=100, damping=1.0, verbose=True, log_interval=10)
     
     print(f"\nSolved in {solution['iterations']} iterations")
     print(f"Final loss: {solution['loss_history'][-1]:.2e}")
@@ -39,7 +39,7 @@ def example_different_reynolds():
     for Re in reynolds_numbers:
         print(f"\nSolving for Re = {Re}...")
         solver = LidDrivenCavitySolver(nx=51, ny=51, Re=Re)
-        solution = solver.solve(max_iter=5000, lr=0.005, verbose=False)
+        solution = solver.solve(max_iter=100, damping=1.0, verbose=False)
         
         print(f"  Re = {Re}: {solution['iterations']} iterations, "
               f"final loss = {solution['loss_history'][-1]:.2e}")
@@ -53,8 +53,8 @@ def example_fine_grid():
     
     solver = LidDrivenCavitySolver(nx=81, ny=81, Re=100)
     
-    # Use smaller learning rate for finer grids
-    solution = solver.solve(max_iter=3000, lr=0.005, verbose=True, log_interval=300)
+    # Use damping for stability on finer grids
+    solution = solver.solve(max_iter=100, damping=0.8, verbose=True, log_interval=10)
     
     print(f"\nSolved in {solution['iterations']} iterations")
     print(f"Final loss: {solution['loss_history'][-1]:.2e}")
@@ -76,7 +76,7 @@ def example_custom_parameters():
         U_lid=2.0
     )
     
-    solution = solver.solve(max_iter=5000, lr=0.008, verbose=True, log_interval=500)
+    solution = solver.solve(max_iter=100, damping=1.0, verbose=True, log_interval=10)
     
     print(f"\nSolved in {solution['iterations']} iterations")
     
